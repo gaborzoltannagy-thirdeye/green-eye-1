@@ -8,22 +8,26 @@
          display:flex; align-items:center; justify-content:center;
          height:100vh; overflow:hidden; }
   #kep { width:80%; max-width:700px; text-align:center; }
-  #cim { font-size:2.5em; text-shadow:0 0 20px #3f6; }
-  #szoveg { font-size:1.2em; line-height:1.6; min-height:200px;
-            white-space:pre-line; margin-top:30px; color:#cfc; }
+  #kepImg { max-width:100%; max-height:45vh; border:2px solid #3f6;
+            box-shadow:0 0 20px #3f6; }
+  #cim { font-size:2.5em; text-shadow:0 0 20px #3f6; margin-top:15px; }
+  #szoveg { font-size:1.1em; line-height:1.5; min-height:180px;
+            white-space:pre-line; margin-top:20px; color:#cfc; }
   #tipp { position:fixed; bottom:20px; width:100%; text-align:center;
           color:#666; font-size:0.9em; }
 </style>
 </head>
 <body>
 <div id="kep">
+  <img id="kepImg" src="" style="display:none;">
   <div id="cim">GREEN EYE</div>
   <div id="szoveg"></div>
   <div id="tipp">[SPACE] – next page</div>
 </div>
 <script>
 const pages = [
-`THE THIRD EYE
+{ kep: "intro1.png",
+  szoveg: `THE THIRD EYE
 
 1960s, night.
 Simon, a pilot, drives toward the airport,
@@ -32,9 +36,10 @@ when he suddenly notices a green glowing circle...
 The circle sucks him in.
 He finds himself in an ancient jungle,
 where he discovers the AMARU KANCHA:
-the abandoned temple of the Serpent God.`,
-`
-INSIDE THE TEMPLE
+the abandoned temple of the Serpent God.` },
+
+{ kep: "intro2.png",
+  szoveg: `INSIDE THE TEMPLE
 
 Here he meets Adele, who became a victim
 of the green circle the same way.
@@ -42,9 +47,10 @@ of the green circle the same way.
 "I'm a teacher. One evening I went jogging
 in the forest... I saw a glowing green circle.
 As I got closer, it sucked me in...
-and I found myself here."`,
-`
-THE PROPHECY OF THE SPIRIT
+and I found myself here."` },
+
+{ kep: "intro3.png",
+  szoveg: `THE PROPHECY OF THE SPIRIT
 
 Suddenly a spirit appears:
 
@@ -58,9 +64,10 @@ Three plagues will strike civilization:
    plague: green eyes, scaly skin --
    infecting everyone with their bite.
 3. The Serpent God himself will appear
-   and turn civilization into ruins."`,
-`
-ZACK, THE KEY
+   and turn civilization into ruins."` },
+
+{ kep: "intro4.png",
+  szoveg: `ZACK, THE KEY
 
 "The third stone can only be found by:
 ZACK, the boy with the green eye on his forehead.
@@ -72,27 +79,71 @@ The green circle opens...
 
 Simon and Adele step through --
 and arrive in Zack's city,
-where the first two plagues are already raging.`,
-`
-CHAPTER 1
+where the first two plagues are already raging.` },
+
+{ kep: "",
+  szoveg: `CHAPTER 1
 FINDING ZACK
 
 Find Zack in the infected city!
 
-[ANY KEY – START GAME]`
+[ANY KEY – START GAME]` }
 ];
 
 let i = 0;
 const text = document.getElementById('szoveg');
+const img = document.getElementById('kepImg');
 
-function show() { text.textContent = pages[i]; }
+function show() {
+  text.textContent = pages[i].szoveg;
+  if (pages[i].kep) {
+    img.src = pages[i].kep;
+    img.style.display = 'inline-block';
+  } else {
+    img.style.display = 'none';
+  }
+}
 
 document.addEventListener('keydown', e => {
   if (i < pages.length - 1) { i++; show(); }
-  else { location.href = 'greeneye-1.html'; } // ← your game's file name!
+  else { location.href = 'game.html'; } // ← ÍRD ÁT a játék fájlnevére!
 });
 
 show();
 </script>
+  // ===== ZACK NPC =====
+const zack = { x: 720, y: 250, talalva: false, pulzus: 0 };
+
+function rajzolZack(ctx) {
+  if (!zack.talalva && zackKozelE()) {
+  zack.talalva = true;
+  alert("ZACK: \"I'm Zack... The eye on my forehead never stops glowing. Who are you?\"\n\nSIMON: \"We came for you. The spirit sent us. You are the key, Zack.\"\n\nZACK: \"Then take me with you... before the biters find us!\"");
+}
+  if (zack.talalva) return;
+  zack.pulzus += 0.05;
+  const feny = 150 + Math.sin(zack.pulzus) * 100;
+  // green eye on forehead (pulsing)
+  ctx.fillStyle = `rgb(0, ${feny}, 60)`;
+  ctx.beginPath();
+  ctx.arc(zack.x + 12, zack.y + 10, 5, 0, Math.PI * 2);
+  ctx.fill();
+  // little boy
+  ctx.fillStyle = "#8b6f47"; // hair
+  ctx.fillRect(zack.x + 5, zack.y, 14, 8);
+  ctx.fillStyle = "#e0b088"; // face
+  ctx.fillRect(zack.x + 7, zack.y + 8, 10, 10);
+  ctx.fillStyle = "#4477cc"; // clothes
+  ctx.fillRect(zack.x + 5, zack.y + 18, 14, 16);
+  ctx.fillStyle = "#333"; // legs
+  ctx.fillRect(zack.x + 5, zack.y + 34, 5, 10);
+  ctx.fillRect(zack.x + 14, zack.y + 34, 5, 10);
+}
+
+function zackKozelE() {
+  const dx = zack.x - jatekos.x;  // ← IGAZÍTSD: a játékos objektum neve!
+  const dy = zack.y - jatekos.y;  // ← pl. player / hero / playerX...
+  return Math.sqrt(dx * dx + dy * dy) < 50;
+}
+
 </body>
 </html>
