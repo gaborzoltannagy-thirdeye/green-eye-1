@@ -26,7 +26,7 @@
 </div>
 <script>
 const pages = [
-{ kep: "intro1.png",
+{ kep: "img/intro1.png",
   szoveg: `THE THIRD EYE
 
 1960s, night.
@@ -38,7 +38,7 @@ He finds himself in an ancient jungle,
 where he discovers the AMARU KANCHA:
 the abandoned temple of the Serpent God.` },
 
-{ kep: "intro2.png",
+{ kep: "img/intro2.png",
   szoveg: `INSIDE THE TEMPLE
 
 Here he meets Adele, who became a victim
@@ -49,7 +49,7 @@ in the forest... I saw a glowing green circle.
 As I got closer, it sucked me in...
 and I found myself here."` },
 
-{ kep: "intro3.png",
+{ kep: "img/intro3.png",
   szoveg: `THE PROPHECY OF THE SPIRIT
 
 Suddenly a spirit appears:
@@ -66,7 +66,7 @@ Three plagues will strike civilization:
 3. The Serpent God himself will appear
    and turn civilization into ruins."` },
 
-{ kep: "intro4.png",
+{ kep: "img/intro4.png",
   szoveg: `ZACK, THE KEY
 
 "The third stone can only be found by:
@@ -106,44 +106,10 @@ function show() {
 
 document.addEventListener('keydown', e => {
   if (i < pages.length - 1) { i++; show(); }
-  else { location.href = 'game.html'; } // ← ÍRD ÁT a játék fájlnevére!
+  else { location.href = 'jatek.html'; } // ← A JÁTÉK FÁJLNEVE!
 });
 
 show();
 </script>
-  // ===== ZACK NPC =====
-const zack = { x: 720, y: 250, talalva: false, pulzus: 0 };
-
-function rajzolZack(ctx) {
-  if (!zack.talalva && zackKozelE()) {
-  zack.talalva = true;
-  alert("ZACK: \"I'm Zack... The eye on my forehead never stops glowing. Who are you?\"\n\nSIMON: \"We came for you. The spirit sent us. You are the key, Zack.\"\n\nZACK: \"Then take me with you... before the biters find us!\"");
-}
-  if (zack.talalva) return;
-  zack.pulzus += 0.05;
-  const feny = 150 + Math.sin(zack.pulzus) * 100;
-  // green eye on forehead (pulsing)
-  ctx.fillStyle = `rgb(0, ${feny}, 60)`;
-  ctx.beginPath();
-  ctx.arc(zack.x + 12, zack.y + 10, 5, 0, Math.PI * 2);
-  ctx.fill();
-  // little boy
-  ctx.fillStyle = "#8b6f47"; // hair
-  ctx.fillRect(zack.x + 5, zack.y, 14, 8);
-  ctx.fillStyle = "#e0b088"; // face
-  ctx.fillRect(zack.x + 7, zack.y + 8, 10, 10);
-  ctx.fillStyle = "#4477cc"; // clothes
-  ctx.fillRect(zack.x + 5, zack.y + 18, 14, 16);
-  ctx.fillStyle = "#333"; // legs
-  ctx.fillRect(zack.x + 5, zack.y + 34, 5, 10);
-  ctx.fillRect(zack.x + 14, zack.y + 34, 5, 10);
-}
-
-function zackKozelE() {
-  const dx = zack.x - jatekos.x;  // ← IGAZÍTSD: a játékos objektum neve!
-  const dy = zack.y - jatekos.y;  // ← pl. player / hero / playerX...
-  return Math.sqrt(dx * dx + dy * dy) < 50;
-}
-
 </body>
 </html>
