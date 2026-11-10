@@ -4,38 +4,42 @@
 <meta charset="UTF-8">
 <title>GREEN EYE – Chapter 1</title>
 <style>
-  body { margin:0; background:#111; overflow:hidden; font-family:monospace; }
-  canvas { display:block; border:2px solid #3f6; }
-  #hud { position:fixed; top:10px; left:10px; color:#3f6; font-size:18px;
+  body { margin:0; background:#000; overflow:hidden; font-family:monospace; }
+  canvas { display:block; margin:0 auto; }
+  #hud { position:fixed; top:12px; left:14px; color:#3f6; font-size:18px;
          text-shadow:0 0 10px #3f6; }
-  #uzenet { position:fixed; bottom:15px; width:100%; text-align:center;
-            color:#cfc; font-size:16px; }
+  #eletCsik { position:fixed; top:44px; left:14px; width:200px; height:16px;
+              border:2px solid #3f6; background:#200; }
+  #eletTolt { height:100%; width:100%; background:linear-gradient(#f55,#a00); }
+  #dialog { position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+            width:80%; max-width:700px; background:#000d; border:3px solid #3f6;
+            border-radius:10px 10px 0 0; padding:14px 20px; color:#cfc;
+            font-size:16px; line-height:1.5; display:none;
+            box-shadow:0 0 25px #3f6; }
+  #dialog .nev { color:#3f6; font-weight:bold; }
 </style>
 </head>
 <body>
 <canvas id="vaszon" width="800" height="500"></canvas>
 <div id="hud">CHAPTER 1: FIND ZACK! 🐍</div>
-<div id="uzenet">ARROWS / WASD = move</div>
+<div id="eletCsik"><div id="eletTolt"></div></div>
+<div id="dialog"></div>
 <script>
 const vaszon = document.getElementById('vaszon');
 const ctx = vaszon.getContext('2d');
 
 // ===== JÁTÉKOS =====
 const jatekos = { x: 50, y: 250, w: 20, h: 34, speed: 3 };
+let elet = 100, remeg = 0, sertIdo = 0;
 
-// ===== ZACK NPC (a pálya végén) =====
-const zack = { x: 720, y: 230, talalva: false, pulzus: 0 };
+// ===== ZACK NPC =====
+const zack = { x: 720, y: 230, talalva: false, pulzus: 0, beszel: false };
 
-// ===== ELLENFELEK: biters (reptile-infected) =====
+// ===== BITEREK =====
 const biters = [
-  { x: 300, y: 100, speed: 1.2 },
-  { x: 450, y: 350, speed: 1.5 },
-  { x: 550, y: 150, speed: 1.8 },
-  { x: 400, y: 250, speed: 1.4 }
+  { x: 300, y: 100, speed: 1.2 }, { x: 450, y: 350, speed: 1.5 },
+  { x: 550, y: 150, speed: 1.8 }, { x: 400, y: 250, speed: 1.4 }
 ];
-
-// ===== ÉLET =====
-let elet = 100;
 
 // ===== IRÁNYÍTÁS =====
 const gombok = {};
@@ -43,112 +47,165 @@ document.addEventListener('keydown', e => gombok[e.key] = true);
 document.addEventListener('keyup',   e => gombok[e.key] = false);
 
 function mozgat() {
+  if (zack.beszel) return;
   if (gombok['ArrowLeft']  || gombok['a']) jatekos.x -= jatekos.speed;
   if (gombok['ArrowRight'] || gombok['d']) jatekos.x += jatekos.speed;
   if (gombok['ArrowUp']    || gombok['w']) jatekos.y -= jatekos.speed;
   if (gombok['ArrowDown']  || gombok['s']) jatekos.y += jatekos.speed;
-  // pályán belül tartás
   jatekos.x = Math.max(0, Math.min(780, jatekos.x));
   jatekos.y = Math.max(0, Math.min(466, jatekos.y));
 }
 
-// ===== BITERS üldöznek =====
 function bitersMozgat() {
   for (const b of biters) {
-    const dx = jatekos.x - b.x;
-    const dy = jatekos.y - b.y;
+    const dx = jatekos.x - b.x, dy = jatekos.y - b.y;
     const tav = Math.sqrt(dx*dx + dy*dy);
-    if (tav > 1) {
-      b.x += (dx / tav) * b.speed;
-      b.y += (dy / tav) * b.speed;
-    }
-    // ha megfog: -1 élet
-    if (tav < 25) {
-      elet -= 1;
+    if (tav > 1) { b.x += (dx/tav)*b.speed; b.y += (dy/tav)*b.speed; }
+    if (tav < 25 && sertIdo <= 0 && !zack.beszel) {
+      elet -= 8; remeg = 15; sertIdo = 40;
       if (elet <= 0) {
         alert("GAME OVER\n\nThe biters got you...\n\n[OK = try again]");
         location.reload();
       }
     }
   }
+  if (sertIdo > 0) sertIdo--;
+}
+
+// ===== PÁRBESZÉD (betűnkénti gépelés) =====
+const dialog = document.getElementById('dialog');
+let gepelo = null;
+function beszél(nev, szoveg, kov) {
+  zack.beszel = true;
+  dialog.style.display = 'block';
+  dialog.innerHTML = '<span class="nev">' + nev + ':</span> <span id="sz"></span>';
+  const cel = document.getElementById('sz');
+  let k = 0;
+  clearInterval(gepelo);
+  gepelo = setInterval(() => {
+    cel.textContent = szoveg.slice(0, ++k);
+    if (k >= szoveg.length) {
+      clearInterval(gepelo);
+      setTimeout(() => { if (kov) kov(); }, 2200);
+    }
+  }, 40);
+}
+
+function zackTalalkozas() {
+  beszél("ZACK", "I'm Zack... The eye on my forehead never stops glowing. Who are you?", () => {
+    beszél("SIMON", "We came for you. The spirit sent us. You are the key, Zack.", () => {
+      beszél("ZACK", "Then take me with you... before the biters find us!", () => {
+        dialog.style.display = 'none';
+        alert("✅ CHAPTER 1 COMPLETE!\n\nZack joined your team!");
+        location.reload(); // ide jön majd a 2. fejezet!
+      });
+    });
+  });
 }
 
 // ===== RAJZOLÁS =====
 function rajzol() {
-  // háttér: fertőzött város (épületek)
-  ctx.fillStyle = "#1a1a2e";
-  ctx.fillRect(0, 0, 800, 500);
-  ctx.fillStyle = "#2a2a3e";
-  for (let k = 0; k < 8; k++) ctx.fillRect(k * 105 + 10, 60, 80, 440);
-  // világító ablakok
-  ctx.fillStyle = "#333355";
-  for (let k = 0; k < 8; k++)
-    for (let s = 0; s < 5; s++)
-      ctx.fillRect(k * 105 + 25, 90 + s * 70, 20, 25);
+  ctx.save();
+  if (remeg > 0) { // képernyő-remegés találatkor
+    ctx.translate((Math.random()-0.5)*remeg, (Math.random()-0.5)*remeg);
+    remeg--;
+  }
 
-  // ZACK
+  // ég színátmenet
+  const eg = ctx.createLinearGradient(0,0,0,500);
+  eg.addColorStop(0, "#0d0d1f"); eg.addColorStop(1, "#1a1a2e");
+  ctx.fillStyle = eg; ctx.fillRect(0,0,800,500);
+  // köd
+  ctx.fillStyle = "rgba(60,120,80,0.06)";
+  for (let k = 0; k < 3; k++)
+    ctx.fillRect(0, 150 + k*110 + Math.sin(Date.now()/2000 + k)*10, 800, 60);
+
+  // épületek
+  ctx.fillStyle = "#2a2a3e";
+  for (let k = 0; k < 8; k++) ctx.fillRect(k*105+10, 60, 80, 440);
+  for (let k = 0; k < 8; k++)
+    for (let s = 0; s < 5; s++) {
+      ctx.fillStyle = (Math.floor(Date.now()/500)+k+s) % 7 === 0 ? "#5a7a4a" : "#22223a";
+      ctx.fillRect(k*105+25, 90+s*70, 20, 25);
+    }
+
+  // repedt utca
+  ctx.strokeStyle = "#111"; ctx.lineWidth = 2;
+  for (let k = 0; k < 6; k++) {
+    ctx.beginPath();
+    ctx.moveTo(k*140+30, 500);
+    ctx.lineTo(k*140+90, 380);
+    ctx.stroke();
+  }
+
+  // ZACK + fényudvar
   zack.pulzus += 0.05;
   const feny = 150 + Math.sin(zack.pulzus) * 100;
-  ctx.fillStyle = `rgb(0, ${feny}, 60)`;
-  ctx.beginPath();
-  ctx.arc(zack.x + 12, zack.y + 10, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#8b6f47"; ctx.fillRect(zack.x + 5, zack.y, 14, 8);
-  ctx.fillStyle = "#e0b088"; ctx.fillRect(zack.x + 7, zack.y + 8, 10, 10);
-  ctx.fillStyle = "#4477cc"; ctx.fillRect(zack.x + 5, zack.y + 18, 14, 16);
+  const aura = ctx.createRadialGradient(zack.x+12, zack.y+10, 5, zack.x+12, zack.y+10, 60);
+  aura.addColorStop(0, `rgba(0,${feny},60,0.35)`);
+  aura.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = aura;
+  ctx.fillRect(zack.x-50, zack.y-50, 120, 140);
+  ctx.fillStyle = `rgb(0,${feny},60)`;
+  ctx.beginPath(); ctx.arc(zack.x+12, zack.y+10, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#8b6f47"; ctx.fillRect(zack.x+5, zack.y, 14, 8);
+  ctx.fillStyle = "#e0b088"; ctx.fillRect(zack.x+7, zack.y+8, 10, 10);
+  ctx.fillStyle = "#4477cc"; ctx.fillRect(zack.x+5, zack.y+18, 14, 16);
   ctx.fillStyle = "#333";
-  ctx.fillRect(zack.x + 5, zack.y + 34, 5, 10);
-  ctx.fillRect(zack.x + 14, zack.y + 34, 5, 10);
+  ctx.fillRect(zack.x+5, zack.y+34, 5, 10);
+  ctx.fillRect(zack.x+14, zack.y+34, 5, 10);
 
-  // JÁTÉKOS (Simon)
-  ctx.fillStyle = "#5a3a1a"; ctx.fillRect(jatekos.x, jatekos.y, 20, 8);
-  ctx.fillStyle = "#e0b088"; ctx.fillRect(jatekos.x + 4, jatekos.y + 8, 12, 10);
-  ctx.fillStyle = "#777";    ctx.fillRect(jatekos.x, jatekos.y + 18, 20, 16);
-  ctx.fillStyle = "#333";
-  ctx.fillRect(jatekos.x + 2, jatekos.y + 34, 6, 10);
-  ctx.fillRect(jatekos.x + 12, jatekos.y + 34, 6, 10);
+  // cél-jelző nyíl (ha Zack még messze)
+  if (!zack.talalva && !zack.beszel) {
+    ctx.fillStyle = `rgba(0,255,100,${0.5+Math.sin(zack.pulzus*2)*0.3})`;
+    ctx.font = "22px monospace"; ctx.textAlign = "center";
+    ctx.fillText("➤ ZACK", 740, 205);
+  }
 
-  // BITERS (zöld szemű fertőzöttek)
+  // JÁTÉKOS (villog sérüléskor)
+  if (sertIdo <= 0 || Math.floor(sertIdo/5) % 2 === 0) {
+    ctx.fillStyle = "#5a3a1a"; ctx.fillRect(jatekos.x, jatekos.y, 20, 8);
+    ctx.fillStyle = "#e0b088"; ctx.fillRect(jatekos.x+4, jatekos.y+8, 12, 10);
+    ctx.fillStyle = "#777";    ctx.fillRect(jatekos.x, jatekos.y+18, 20, 16);
+    ctx.fillStyle = "#333";
+    ctx.fillRect(jatekos.x+2, jatekos.y+34, 6, 10);
+    ctx.fillRect(jatekos.x+12, jatekos.y+34, 6, 10);
+  }
+
+  // BITEREK
   for (const b of biters) {
     ctx.fillStyle = "#4a6a3a"; ctx.fillRect(b.x, b.y, 18, 8);
-    ctx.fillStyle = "#b0d090"; ctx.fillRect(b.x + 3, b.y + 8, 12, 10);
-    ctx.fillStyle = "#3fff3f"; // zöld szemek!
-    ctx.fillRect(b.x + 4, b.y + 11, 3, 3);
-    ctx.fillRect(b.x + 11, b.y + 11, 3, 3);
-    ctx.fillStyle = "#3a3a2a"; ctx.fillRect(b.x + 1, b.y + 18, 16, 14);
+    ctx.fillStyle = "#b0d090"; ctx.fillRect(b.x+3, b.y+8, 12, 10);
+    ctx.fillStyle = "#3fff3f";
+    ctx.fillRect(b.x+4, b.y+11, 3, 3);
+    ctx.fillRect(b.x+11, b.y+11, 3, 3);
+    ctx.fillStyle = "#3a3a2a"; ctx.fillRect(b.x+1, b.y+18, 16, 14);
   }
+  ctx.restore();
 }
 
-// ===== HUD frissítés =====
+// ===== HUD + ÉLETCSÍK =====
 const hud = document.getElementById('hud');
-const uzenet = document.getElementById('uzenet');
+const eletTolt = document.getElementById('eletTolt');
 function hudFrissit() {
-  hud.textContent = "CHAPTER 1: FIND ZACK!   ❤️ LIFE: " + elet;
+  eletTolt.style.width = Math.max(0, elet) + "%";
+  if (elet < 30) eletTolt.style.background = "linear-gradient(#f00,#500)";
 }
 
-// ===== ZACK MEGTALÁLÁSA =====
 function ellenorizZack() {
-  if (zack.talalva) return;
-  const dx = zack.x - jatekos.x;
-  const dy = zack.y - jatekos.y;
+  if (zack.talalva || zack.beszel) return;
+  const dx = zack.x - jatekos.x, dy = zack.y - jatekos.y;
   if (Math.sqrt(dx*dx + dy*dy) < 40) {
     zack.talalva = true;
-    uzenet.textContent = "💬 ZACK: \"I'm Zack... The eye on my forehead never stops glowing. Who are you?\"";
-    setTimeout(() => {
-      alert("ZACK: \"I'm Zack... The eye on my forehead never stops glowing. Who are you?\"\n\nSIMON: \"We came for you. The spirit sent us. You are the key, Zack.\"\n\nZACK: \"Then take me with you... before the biters find us!\"\n\n✅ CHAPTER 1 COMPLETE!");
-      // ide jön majd a 2. fejezet! most: újrakezdés
-      location.reload();
-    }, 100);
+    zackTalalkozas();
   }
 }
 
 // ===== FŐ CIKLUS =====
 function loop() {
-  if (!zack.talalva) {
-    mozgat();
-    bitersMozgat();
-    hudFrissit();
-  }
+  mozgat();
+  bitersMozgat();
+  hudFrissit();
   rajzol();
   ellenorizZack();
   requestAnimationFrame(loop);
